@@ -4,17 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code compiler</title>
+    <title>Document</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 
 <body>
-    <div class="topbar">
-        Code compiler
-    </div>
+    <div class="topbar">Code compiler</div>
 
     <div class="main-container">
+
         <div class="select-lang">
             <div class="lang" id="c">C</div>
             <div class="lang" id="cpp">C++</div>
@@ -22,92 +21,151 @@
             <div class="lang" id="java">Java</div>
         </div>
 
-        <div class="editor-container">
-            <div class="code-editor" id="codeEditor">
-                code editor
-            </div>
+        <select name="language" id="langSelector" hidden>
+            <option value=""></option>
+            <option value="c">C</option>
+            <option value="cpp">Cpp</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+        </select>
 
-            <div class="col-resizer" id="colResizer"></div>
+        <input type="text" id="filename" hidden>
 
-            <div class="input-output-container" id="inputOutputContainer">
-                <div class="input-container" id="input">Inputs</div>
-
-                <div class="row-resizer" id="rowResizer"></div>
-
-                <div class="output-container" id="output">Output</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- <div class="editor-container">
-        <div class="select-lang">
-            <div class="lang" id="c">C</div>
-            <div class="lang" id="cpp">C++</div>
-            <div class="lang" id="python">Python</div>
-            <div class="lang" id="java">Java</div>
-        </div>
-
-        <div class="code-input-output-container">
-            <div class="code-editor-wrapper">
-                <div class="line-number" id="codeLineNumber">
-                    <span>1</span>
+        <div class="editor-grid" id="editorGrid">
+            <div class="left-pane" id="leftPane">
+                <div class="head">
+                    <div class="head-text" id="openFile">Code</div>
+                    <button class="head-btn" id="submitBtn" onclick="codeSubmission()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="#686D76" width="24px" height="24px">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                        </svg>
+                        Run
+                    </button>
                 </div>
+                <div class="code-editor-wrapper">
+                    <div class="line-number" id="codeLineNumber">
+                        <span>1</span>
+                    </div>
 
-                <div class="code-editor">
-                    <textarea name="" id="code" placeholder="Code here..."></textarea>
+                    <div class="code-editor">
+                        <textarea name="" id="codeTextArea" placeholder="Code here..." spellcheck="false"></textarea>
+                    </div>
                 </div>
             </div>
 
-            <div class="input-output-container">
-                <div class="input-container">
-                    <div class="input-head">Inputs</div>
+            <div class="resizer-x" id="resizerX"></div>
 
-                    <div class="input-wrapper">
+            <div class="right-pane" id="rightPane">
+                <div class="top-right" id="topRight">
+                    <div class="head">Inputs</div>
+                    <div class="inputs-container">
                         <div class="line-number" id="inputLineNumber">
                             <span>1</span>
                         </div>
-                        <div class="input-area">
-                            <textarea name="" id="input"></textarea>
+
+                        <div class="input-editor">
+                            <textarea name="" id="inputTextArea" placeholder="" spellcheck="false"></textarea>
                         </div>
                     </div>
                 </div>
-                
-                <div class="output-container">
-                    <div class="output-head">Output</div>
+
+                <div class="resizer-y" id="resizerY"></div>
+
+                <div class="bottom-right" id="bottomRight">
+                    <div class="head">Output</div>
+                    <div class="output-container" id="output">
+                    </div>
                 </div>
             </div>
         </div>
-    </div> -->
 
-    <!-- <div class="select-lang">
-        <div class="lang" id="c">C</div>
-        <div class="lang" id="cpp">C++</div>
-        <div class="lang" id="python">Python</div>
-        <div class="lang" id="java">Java</div>
     </div>
-    <div class="code-input-output-container">
-        <div class="code-container">
-            <select id="language-select" name="language" style="display: none;">
-                <option value="c">C</option>
-                <option value="cpp">C++</option>
-                <option value="python">Python</option>
-                <option value="java">Java</option>
-            </select>
 
-            <textarea name="" id="code" placeholder="Code here..." spellcheck="false"></textarea>
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
         </div>
-        <div class="input-output-container">
-            <div class="input-container"></div>
-            <div class="output-container"></div>
-        </div>
-    </div> -->
+    </div>
 
-    <!-- Update line numbers -->
+    <script src="{{url_for('static', filename='js/detect_lang.js')}}"></script>
+
+    <!-- Lang detection -->
+    <Script>
+        const langSelector = document.getElementById("langSelector");
+        const filename = document.getElementById("filename");
+        const codeTextArea = document.getElementById("codeTextArea");
+        const inputTextArea = document.getElementById("inputTextArea");
+
+        const langOptions = ['c', 'cpp', 'python', 'java'];
+
+        codeTextArea.addEventListener("input", () => {
+            const code = codeTextArea.value;
+            const detectedLang = detectLanguage(code);
+
+            let matched = false;
+
+            langOptions.forEach((option) => {
+                const element = document.getElementById(option);
+                if (element) {
+                    if (option === detectedLang) {
+                        element.classList.add("active");
+                        langSelector.value = detectedLang;
+                        filename.value = setFilename(detectedLang);
+                        document.getElementById('openFile').textContent = setFilename(detectedLang);
+                        matched = true;
+                    } else {
+                        element.classList.remove("active");
+                    }
+                }
+            });
+
+            if (!matched) {
+                langSelector.value = "";
+                filename.value = "";
+                document.getElementById('openFile').textContent = "Code";
+            }
+        });
+    </Script>
+
+    <!-- Select lang -->
     <script>
-        const codeTextArea = document.getElementById("code");
-        const codeLineNum = document.getElementById("codeLineNumber");
+        document.querySelectorAll('.select-lang .lang').forEach((langDiv) => {
+            langDiv.addEventListener('click', () => {
 
-        const inputTextArea = document.getElementById("input");
+                document.querySelectorAll('.select-lang .lang').forEach(div => {
+                    div.classList.remove("active");
+                });
+
+                langDiv.classList.add("active");
+
+                langSelector.value = langDiv.id;
+                filename.value = setFilename(langDiv.id);
+                document.getElementById('openFile').textContent = setFilename(langDiv.id);
+            });
+        });
+    </script>
+
+    <script>
+        function setFilename(detectedLang) {
+            if (detectedLang === 'c') {
+                return 'main.c';
+            } else if (detectedLang === 'cpp') {
+                return 'main.cpp';
+            } else if (detectedLang === 'python') {
+                return 'main.py';
+            } else if (detectedLang === 'java') {
+                return 'main.java';
+            } else {
+                return '';
+            }
+        }
+    </script>
+
+    <!-- Line numbers -->
+    <script>
+        const codeLineNum = document.getElementById("codeLineNumber");
         const inputLineNum = document.getElementById("inputLineNumber");
 
         function updateLineNumber(textarea, lineNum) {
@@ -131,135 +189,200 @@
 
         updateLineNumber(codeTextArea, codeLineNum);
         updateLineNumber(inputTextArea, inputLineNum);
-
     </script>
 
-    <!-- Col & Row Resizer -->
-    <Script>
-        // COLUMN RESIZER (code editor ↔ input/output)
-        const colResizer = document.getElementById('colResizer');
-        const editorContainer = document.querySelector('.editor-container');
-        const codeEditor = document.getElementById('codeEditor');
+    <!-- Resizable layout -->
+    <script>
+        // Horizontal Resizer (Between Left and Right)
+        const resizerX = document.getElementById("resizerX");
+        const editorGrid = document.getElementById("editorGrid");
 
-        colResizer.addEventListener('mousedown', (e) => {
-            document.addEventListener('mousemove', resizeCol);
-            document.addEventListener('mouseup', () => {
-                document.removeEventListener('mousemove', resizeCol);
-            });
+        resizerX.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+
+            const startX = e.clientX;
+            const startLeftWidth = editorGrid.children[0].getBoundingClientRect().width;
+            const startRightWidth = editorGrid.children[2].getBoundingClientRect().width;
+
+            function onMouseMove(e) {
+                const delta = e.clientX - startX;
+                const newLeft = startLeftWidth + delta;
+                const newRight = startRightWidth - delta;
+
+                if (newLeft < 100 || newRight < 100) return;
+
+                editorGrid.style.gridTemplateColumns = `${newLeft}px 4px ${newRight}px`;
+            }
+
+            function onMouseUp() {
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+            }
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
         });
 
-        function resizeCol(e) {
-            const newWidth = e.clientX;
-            codeEditor.style.width = `${newWidth}px`;
-            editorContainer.style.gridTemplateColumns = `${newWidth}px 2px 1fr`;
-        }
+        // Vertical Resizer (Inside Right Pane)
+        const resizerY = document.getElementById("resizerY");
+        const rightPane = document.getElementById("rightPane");
 
-        // ROW RESIZER (input ↕ output)
-        const rowResizer = document.getElementById('rowResizer');
-        const inputContainer = document.getElementById('input');
-        const inputOutputContainer = document.getElementById('inputOutputContainer');
+        resizerY.addEventListener("mousedown", function (e) {
+            e.preventDefault();
 
-        rowResizer.addEventListener('mousedown', (e) => {
-            document.addEventListener('mousemove', resizeRow);
-            document.addEventListener('mouseup', () => {
-                document.removeEventListener('mousemove', resizeRow);
-            });
+            const startY = e.clientY;
+            const topRight = document.getElementById("topRight");
+            const bottomRight = document.getElementById("bottomRight");
+
+            const startTopHeight = topRight.getBoundingClientRect().height;
+            const startBottomHeight = bottomRight.getBoundingClientRect().height;
+
+            function onMouseMove(e) {
+                const delta = e.clientY - startY;
+                const newTop = startTopHeight + delta;
+                const newBottom = startBottomHeight - delta;
+
+                const totalHeight = rightPane.clientHeight;
+
+                if (newTop < 50 || newBottom < 50) return;
+                if (newTop + newBottom + 4 > totalHeight) return;
+
+                rightPane.style.gridTemplateRows = `${newTop}px 4px ${newBottom}px`;
+            }
+
+            function onMouseUp() {
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+            }
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
         });
+    </script>
 
-        function resizeRow(e) {
-            const containerTop = inputOutputContainer.getBoundingClientRect().top;
-            const offset = e.clientY - containerTop;
-            inputContainer.style.height = `${offset}px`;
-            inputOutputContainer.style.gridTemplateRows = `${offset}px 2px 1fr`;
-        }
-    </Script>
-
-    <!-- <script>
-        document.getElementById('code').addEventListener('keydown', function (e) {
+    <!-- Tab insertion -->
+    <script>
+        document.getElementById('codeTextArea').addEventListener('keydown', function (e) {
             if (e.key === "Tab") {
                 e.preventDefault();
+                const indent = "    "; // 4 spaces
+                const isShift = e.shiftKey;
                 const start = this.selectionStart;
                 const end = this.selectionEnd;
 
                 const value = this.value;
-                const isShift = e.shiftKey;
+                const before = value.substring(0, start);
+                const selected = value.substring(start, end);
+                const after = value.substring(end);
 
-                // Split value by lines
-                const lines = value.substring(start, end).split("\n");
+                let newText = "";
+                let newStart = start;
+                let newEnd = end;
 
-                if (isShift) {
-                    // Shift + Tab = unindent
-                    for (let i = 0; i < lines.length; i++) {
-                        if (lines[i].startsWith("\t")) {
-                            lines[i] = lines[i].substring(1);
-                        } else if (lines[i].startsWith("    ")) {
-                            lines[i] = lines[i].substring(4); // If using spaces for tabs
+                if (start !== end) {
+                    // Multi-line selection
+                    const lines = selected.split("\n");
+                    if (isShift) {
+                        for (let i = 0; i < lines.length; i++) {
+                            if (lines[i].startsWith(indent)) {
+                                lines[i] = lines[i].substring(indent.length);
+                                newEnd -= indent.length;
+                            }
+                        }
+                    } else {
+                        for (let i = 0; i < lines.length; i++) {
+                            lines[i] = indent + lines[i];
+                            newEnd += indent.length;
                         }
                     }
+                    newText = lines.join("\n");
+                    this.value = before + newText + after;
+                    this.selectionStart = newStart;
+                    this.selectionEnd = newEnd;
                 } else {
-                    // Tab = indent
-                    for (let i = 0; i < lines.length; i++) {
-                        lines[i] = "\t" + lines[i];
+                    // Single caret, insert or remove indent at current line start
+                    const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+                    if (isShift) {
+                        if (value.substr(lineStart, indent.length) === indent) {
+                            this.value = value.substring(0, lineStart) +
+                                value.substring(lineStart + indent.length);
+                            this.selectionStart = this.selectionEnd = start - indent.length;
+                        }
+                    } else {
+                        this.value = value.substring(0, lineStart) + indent + value.substring(lineStart);
+                        this.selectionStart = this.selectionEnd = start + indent.length;
                     }
-                }
-
-                const newText = lines.join("\n");
-
-                // Replace the selected text
-                this.value = value.substring(0, start) + newText + value.substring(end);
-
-                // Recalculate selection range
-                if (start !== end) {
-                    const lineCount = lines.length;
-                    const offset = isShift ? -1 : 1;
-                    this.selectionStart = start;
-                    this.selectionEnd = end + offset * lineCount;
-                } else {
-                    this.selectionStart = this.selectionEnd = start + (isShift ? -1 : 1);
                 }
             }
         });
     </script>
 
-    <script src="{{ url_for('static', filename='js/detect_lang.js')}}"></script>
-
     <script>
-        const supportedLangs = ['c', 'cpp', 'python', 'java'];
-        const codeTextarea = document.getElementById("code");
+        async function codeSubmission() {
+            document.getElementById('output').textContent = '';
+            const button = document.getElementById('submitBtn');
+            button.disabled = true;
 
-        codeTextarea.addEventListener("input", () => {
-            const code = codeTextarea.value;
-            const detectedLang = detectLanguage(code);
+            if (!langSelector.value || !codeTextArea.value) {
+                let errorMsg = ''; 
+                if (!langSelector.value) errorMsg += 'Please select a language.<br>';
+                if (!codeTextArea.value) errorMsg += 'Code is required.<br>';
 
-            supportedLangs.forEach((lang) => {
-                const element = document.getElementById(lang);
-                if (element) {
-                    if (lang === detectedLang) {
-                        element.classList.add("active");
-                    } else {
-                        element.classList.remove("active");
-                    }
-                }
-            });
-        });
+                document.getElementById('modalMessage').innerHTML = errorMsg;
+                document.getElementById('errorModal').classList.add('show');
 
-    </script>
+                setTimeout(() => {
+                    document.getElementById('errorModal').classList.remove('show');
+                    setTimeout(() => {
+                        document.getElementById('modalMessage').innerHTML = '';
+                        button.disabled = false;
+                    }, 1000);
+                }, 3000);
 
-    <script>
-        document.querySelectorAll('.select-lang .lang').forEach(langDiv => {
-            langDiv.addEventListener('click', () => {
+                return;
+            }
 
-                document.querySelectorAll('.select-lang .lang').forEach(div => {
-                    div.classList.remove('active');
+            const url = {{ url_for("routes.run") | tojson }};
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lang: langSelector.value,
+                        file: filename.value,
+                        code: codeTextArea.value,
+                        input: inputTextArea.value
+                    })
                 });
 
-                langDiv.classList.add('active');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                const selectedLanguage = langDiv.id;
-                document.getElementById('language-select').value = selectedLanguage;
-            });
-        });
-    </script> -->
+                const data = await response.json();
+                console.log(data);
+
+                if (!!data.stdout) {
+                    document.getElementById('output').textContent += `${data.stdout}\n\n`;
+                }
+
+                if (data.stderr !== null) {
+                    document.getElementById('output').textContent += `${data.stderr}\n\n`;
+                } else if (data.exception !== null) {
+                    document.getElementById('output').textContent += `${data.exception}\n\n`;
+                }
+            } catch (error) {
+                console.error('Error', error);
+                document.getElementById('output').textContent = `Error: ${error.message}\n\n`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+
 </body>
 
 </html>
