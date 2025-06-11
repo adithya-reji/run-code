@@ -15,10 +15,6 @@ url = f"https://{HOST}/api/v1/run"
 def index():
     return render_template('index.html')
 
-@bp.route("/home", methods=['GET', 'POST'])
-def home():
-    return render_template('home.html')
-
 @bp.route("/run", methods=['POST'])
 def run():
     try:
