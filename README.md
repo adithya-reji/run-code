@@ -1,2 +1,2 @@
-# code-compiler
-A simple online code compiler for compiling C, C++, Python, Java codes.
+# run-code
+A simple online tool to run C, C++, Python, Java codes.
